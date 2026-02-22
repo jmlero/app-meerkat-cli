@@ -97,7 +97,7 @@ meerkat receipts list --json
 | `-l, --limit <n>` | 50 | Number of receipts to fetch |
 | `-o, --offset <n>` | 0 | Offset for pagination |
 
-The table output shows resolved store names (e.g. "Mercadona" instead of a numeric ID) and totals formatted with the configured currency symbol.
+The table output shows resolved store names (e.g. "Mercadona" instead of a numeric ID) and totals formatted in euros (€).
 
 #### `meerkat receipts show <id>`
 
@@ -106,34 +106,18 @@ meerkat receipts show 101
 meerkat receipts show 101 --json
 ```
 
-Displays receipt header (store, date, total) followed by a products table with quantities and prices. All amounts use the configured currency symbol in human-readable output; JSON output returns raw numbers.
+Displays receipt header (store, date, total) followed by a products table with quantities and prices. All amounts are shown in euros (€) in human-readable output; JSON output returns raw numbers.
 
 ### `meerkat config`
 
-View or edit CLI settings.
-
-#### `meerkat config show` (default)
+Show current CLI settings.
 
 ```bash
 meerkat config
-meerkat config show --json
+meerkat config --json
 ```
 
-Prints the current configuration: server URL, currency, logged-in email, and file paths for `config.json` and `credentials.json`.
-
-#### `meerkat config set <key> <value>`
-
-```bash
-meerkat config set currency USD
-meerkat config set server_url https://custom.example.com
-```
-
-| Key | Description |
-|-----|-------------|
-| `currency` | Currency code used when formatting amounts (default: `EUR`). Supported symbols: EUR (€), USD ($), GBP (£). Other codes are shown as a prefix. |
-| `server_url` | Base URL of the Meerkat API server |
-
-Requires an existing configuration — run `meerkat login` first.
+Prints the current configuration: server URL, currency (EUR), logged-in email, and file paths for `config.json` and `credentials.json`.
 
 ## Configuration Files
 
@@ -141,7 +125,7 @@ Meerkat stores its data under `~/.config/meerkat/` (override with the `MEERKAT_C
 
 | File | Contents |
 |------|----------|
-| `config.json` | Server URL, Supabase keys, currency preference |
+| `config.json` | Server URL, Supabase keys |
 | `credentials.json` | Email, access token, refresh token, expiry (mode 600) |
 
 ## Exit Codes

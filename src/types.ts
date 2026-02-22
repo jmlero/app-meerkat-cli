@@ -2,7 +2,6 @@ export interface StoredConfig {
   server_url: string;
   supabase_url: string;
   supabase_anon_key: string;
-  currency?: string;
 }
 
 export interface StoredCredentials {

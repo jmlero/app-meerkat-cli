@@ -4,24 +4,17 @@ import {
   mockReceipt,
   mockReceiptProduct,
   mockSupermarketsResponse,
-  mockConfig,
 } from "../helpers.js";
 
 vi.mock("../../src/lib/api-client.js", () => ({
   apiRequest: vi.fn(),
 }));
 
-vi.mock("../../src/lib/config.js", () => ({
-  loadConfig: vi.fn(),
-}));
-
 import { apiRequest } from "../../src/lib/api-client.js";
-import { loadConfig } from "../../src/lib/config.js";
 import { Command } from "commander";
 import { registerReceiptsCommand } from "../../src/commands/receipts.js";
 
 const mockedApiRequest = vi.mocked(apiRequest);
-const mockedLoadConfig = vi.mocked(loadConfig);
 
 describe("receipts command", () => {
   let program: Command;
@@ -45,30 +38,23 @@ describe("receipts command", () => {
   function setupListMocks(overrides?: {
     receiptsResponse?: ReturnType<typeof mockReceiptsResponse>;
     supermarketsResponse?: ReturnType<typeof mockSupermarketsResponse>;
-    config?: ReturnType<typeof mockConfig> | null;
   }) {
     const receipts = overrides?.receiptsResponse ?? mockReceiptsResponse();
     const supermarkets = overrides?.supermarketsResponse ?? mockSupermarketsResponse();
-    const config = overrides?.config !== undefined ? overrides.config : mockConfig();
 
-    // listAction calls: apiRequest (receipts), apiRequest (supermarkets), loadConfig
     mockedApiRequest.mockResolvedValueOnce(receipts);
     mockedApiRequest.mockResolvedValueOnce(supermarkets);
-    mockedLoadConfig.mockResolvedValueOnce(config);
   }
 
   function setupShowMocks(overrides?: {
     receipt?: ReturnType<typeof mockReceipt>;
     supermarketsResponse?: ReturnType<typeof mockSupermarketsResponse>;
-    config?: ReturnType<typeof mockConfig> | null;
   }) {
     const receipt = overrides?.receipt ?? mockReceipt();
     const supermarkets = overrides?.supermarketsResponse ?? mockSupermarketsResponse();
-    const config = overrides?.config !== undefined ? overrides.config : mockConfig();
 
     mockedApiRequest.mockResolvedValueOnce(receipt);
     mockedApiRequest.mockResolvedValueOnce(supermarkets);
-    mockedLoadConfig.mockResolvedValueOnce(config);
   }
 
   describe("list", () => {
@@ -146,7 +132,6 @@ describe("receipts command", () => {
       const receipts = mockReceiptsResponse();
       mockedApiRequest.mockResolvedValueOnce(receipts);
       mockedApiRequest.mockRejectedValueOnce(new Error("Supermarkets API error"));
-      mockedLoadConfig.mockResolvedValueOnce(mockConfig());
 
       const logSpy = vi.mocked(console.log);
 
@@ -154,19 +139,6 @@ describe("receipts command", () => {
 
       const allOutput = logSpy.mock.calls.map((c) => c[0]).join("\n");
       expect(allOutput).toContain("5");
-    });
-
-    it("formats totals with custom currency", async () => {
-      setupListMocks({
-        config: mockConfig({ currency: "USD" }),
-      });
-
-      const logSpy = vi.mocked(console.log);
-
-      await program.parseAsync(["node", "test", "receipts"]);
-
-      const allOutput = logSpy.mock.calls.map((c) => c[0]).join("\n");
-      expect(allOutput).toContain("$42.50");
     });
   });
 

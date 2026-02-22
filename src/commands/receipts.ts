@@ -7,7 +7,6 @@ import {
   createSpinner,
 } from "../lib/output.js";
 import { apiRequest } from "../lib/api-client.js";
-import { loadConfig } from "../lib/config.js";
 import type {
   ReceiptsResponse,
   Receipt,
@@ -16,17 +15,8 @@ import type {
 } from "../types.js";
 import { EXIT_ERROR } from "../types.js";
 
-function currencySymbol(code: string): string {
-  switch (code) {
-    case "EUR": return "€";
-    case "USD": return "$";
-    case "GBP": return "£";
-    default: return `${code} `;
-  }
-}
-
-function formatCurrency(amount: number, currency = "EUR"): string {
-  return `${currencySymbol(currency)}${amount.toFixed(2)}`;
+function formatCurrency(amount: number): string {
+  return `€${amount.toFixed(2)}`;
 }
 
 async function fetchSupermarketMap(verbose?: boolean): Promise<Map<number, string>> {
@@ -78,16 +68,13 @@ async function listAction(
   spinner.start();
 
   try {
-    const [data, storeMap, config] = await Promise.all([
+    const [data, storeMap] = await Promise.all([
       apiRequest<ReceiptsResponse>(
         `/api/v1/receipts/recent?limit=${limit}&offset=${offset}`,
         { verbose: opts.verbose },
       ),
       fetchSupermarketMap(opts.verbose),
-      loadConfig(),
     ]);
-
-    const currency = config?.currency ?? "EUR";
 
     spinner.stop();
 
@@ -102,7 +89,7 @@ async function listAction(
           String(r.id),
           storeMap.get(r.supermarket_id) ?? String(r.supermarket_id),
           r.date,
-          formatCurrency(r.total, currency),
+          formatCurrency(r.total),
           String(r.products?.length ?? "-"),
         ]),
       );
@@ -128,16 +115,13 @@ async function showAction(
   spinner.start();
 
   try {
-    const [receipt, storeMap, config] = await Promise.all([
+    const [receipt, storeMap] = await Promise.all([
       apiRequest<Receipt>(
         `/api/v1/receipts/${id}`,
         { verbose: opts.verbose },
       ),
       fetchSupermarketMap(opts.verbose),
-      loadConfig(),
     ]);
-
-    const currency = config?.currency ?? "EUR";
 
     spinner.stop();
 
@@ -148,7 +132,7 @@ async function showAction(
       printSuccess(`Receipt #${receipt.id}`);
       console.log(`  Store: ${storeName}`);
       console.log(`  Date: ${receipt.date}`);
-      console.log(`  Total: ${formatCurrency(receipt.total, currency)}`);
+      console.log(`  Total: ${formatCurrency(receipt.total)}`);
 
       if (receipt.products && receipt.products.length > 0) {
         console.log("");
@@ -157,8 +141,8 @@ async function showAction(
           receipt.products.map((p) => [
             p.name,
             String(p.quantity),
-            formatCurrency(p.unit_price, currency),
-            formatCurrency(p.price, currency),
+            formatCurrency(p.unit_price),
+            formatCurrency(p.price),
           ]),
         );
       }
