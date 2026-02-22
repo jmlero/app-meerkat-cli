@@ -2,6 +2,7 @@ export interface StoredConfig {
   server_url: string;
   supabase_url: string;
   supabase_anon_key: string;
+  currency?: string;
 }
 
 export interface StoredCredentials {
@@ -44,6 +45,41 @@ export interface InboxItem {
   merchant_name?: string;
   total_amount?: number;
   currency?: string;
+}
+
+export interface ReceiptProduct {
+  id: number;
+  name: string;
+  price: number;
+  quantity: number;
+  unit_price: number;
+}
+
+export interface Receipt {
+  id: number;
+  supermarket_id: number;
+  date: string;
+  total: number;
+  products?: ReceiptProduct[];
+}
+
+export interface ReceiptsResponse {
+  total: number;
+  offset: number;
+  limit: number;
+  items: Receipt[];
+}
+
+export interface Supermarket {
+  id: number;
+  name: string;
+  country_code: string;
+  receipt_count: number;
+}
+
+export interface SupermarketsResponse {
+  total: number;
+  items: Supermarket[];
 }
 
 export interface ApiErrorResponse {

@@ -14,17 +14,27 @@ import type {
 } from "../types.js";
 import { EXIT_ERROR } from "../types.js";
 
+const DEFAULT_SUPABASE_URL = "https://bmitcoorzyppmhmcntae.supabase.co";
+const DEFAULT_SUPABASE_ANON_KEY =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJtaXRjb29yenlwcG1obWNudGFlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk5NTY2MzYsImV4cCI6MjA4NTUzMjYzNn0.eE1amvJBkyOl9ubtpJfNiwgiw-_9i8--Rph2xVw8Au0";
+
 export function registerLoginCommand(program: Command): void {
   program
     .command("login")
     .description("Authenticate with Meerkat")
-    .action(async () => {
+    .option("-e, --email <email>", "Email address")
+    .option("-p, --password <password>", "Password")
+    .action(async (cmdOpts: { email?: string; password?: string }) => {
       const opts = program.opts<GlobalOptions>();
-      await loginAction(opts);
+      await loginAction(cmdOpts.email, cmdOpts.password, opts);
     });
 }
 
-async function loginAction(opts: GlobalOptions): Promise<void> {
+async function loginAction(
+  emailFlag: string | undefined,
+  passwordFlag: string | undefined,
+  opts: GlobalOptions,
+): Promise<void> {
   const serverUrl =
     opts.server ??
     (await input({
@@ -32,32 +42,35 @@ async function loginAction(opts: GlobalOptions): Promise<void> {
       default: "https://themeerkat.app",
     }));
 
-  const email = await input({ message: "Email:" });
-  const password = await passwordPrompt({ message: "Password:" });
+  const email = emailFlag ?? (await input({ message: "Email:" }));
+  const password =
+    passwordFlag ?? (await passwordPrompt({ message: "Password:" }));
 
   const spinner = createSpinner("Logging in…");
   spinner.start();
 
   try {
-    // Discover Supabase config
+    // Discover Supabase config (fall back to defaults if endpoint not available)
+    let authConfig: AuthConfigResponse;
     const configUrl = `${serverUrl}/api/v1/auth/config`;
     if (opts.verbose) {
       console.error(`[verbose] GET ${configUrl}`);
     }
 
     const configResp = await fetch(configUrl);
-    if (!configResp.ok) {
-      spinner.stop();
-      const detail = `Failed to fetch auth config: HTTP ${configResp.status}`;
-      if (opts.json) {
-        printJson({ error: detail });
-      } else {
-        printError(detail);
+    if (configResp.ok) {
+      authConfig = (await configResp.json()) as AuthConfigResponse;
+    } else {
+      if (opts.verbose) {
+        console.error(
+          `[verbose] Discovery endpoint returned ${configResp.status}, using defaults`,
+        );
       }
-      process.exit(EXIT_ERROR);
+      authConfig = {
+        supabase_url: DEFAULT_SUPABASE_URL,
+        supabase_anon_key: DEFAULT_SUPABASE_ANON_KEY,
+      };
     }
-
-    const authConfig = (await configResp.json()) as AuthConfigResponse;
 
     // Authenticate with Supabase
     const tokenUrl = `${authConfig.supabase_url}/auth/v1/token?grant_type=password`;

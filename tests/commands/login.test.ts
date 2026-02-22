@@ -98,12 +98,34 @@ describe("login command", () => {
     ).rejects.toThrow("process.exit called");
   });
 
-  it("uses --server option instead of prompting", async () => {
-    const authConfig = mockAuthConfigResponse();
+  it("falls back to defaults when discovery endpoint returns 404", async () => {
     const tokenResp = mockSupabaseTokenResponse();
 
-    mockedInput.mockResolvedValueOnce("user@test.com");
+    mockedInput
+      .mockResolvedValueOnce("https://test.example.com")
+      .mockResolvedValueOnce("user@test.com");
     mockedPassword.mockResolvedValueOnce("password123");
+
+    vi.spyOn(globalThis, "fetch")
+      .mockResolvedValueOnce(mockFetchResponse({ detail: "Not Found" }, 404))
+      .mockResolvedValueOnce(mockFetchResponse(tokenResp));
+
+    vi.spyOn(console, "log").mockImplementation(() => {});
+    vi.spyOn(console, "error").mockImplementation(() => {});
+
+    await program.parseAsync(["node", "test", "login"]);
+
+    expect(mockedSaveConfig).toHaveBeenCalledWith(
+      expect.objectContaining({
+        server_url: "https://test.example.com",
+        supabase_url: expect.stringContaining("supabase.co"),
+      }),
+    );
+  });
+
+  it("uses --server, --email, --password flags without prompting", async () => {
+    const authConfig = mockAuthConfigResponse();
+    const tokenResp = mockSupabaseTokenResponse();
 
     vi.spyOn(globalThis, "fetch")
       .mockResolvedValueOnce(mockFetchResponse(authConfig))
@@ -118,11 +140,22 @@ describe("login command", () => {
       "--server",
       "https://custom.example.com",
       "login",
+      "--email",
+      "flag@test.com",
+      "--password",
+      "secret",
     ]);
 
+    expect(mockedInput).not.toHaveBeenCalled();
+    expect(mockedPassword).not.toHaveBeenCalled();
     expect(mockedSaveConfig).toHaveBeenCalledWith(
       expect.objectContaining({
         server_url: "https://custom.example.com",
+      }),
+    );
+    expect(mockedSaveCredentials).toHaveBeenCalledWith(
+      expect.objectContaining({
+        email: "flag@test.com",
       }),
     );
   });

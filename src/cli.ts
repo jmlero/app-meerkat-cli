@@ -1,6 +1,10 @@
 import { Command } from "commander";
 import { registerLoginCommand } from "./commands/login.js";
+import { registerLogoutCommand } from "./commands/logout.js";
 import { registerUploadCommand } from "./commands/upload.js";
+import { registerWhoamiCommand } from "./commands/whoami.js";
+import { registerReceiptsCommand } from "./commands/receipts.js";
+import { registerConfigCommand } from "./commands/config.js";
 import { printError, printJson } from "./lib/output.js";
 import { AuthRequiredError } from "./lib/auth.js";
 import { EXIT_AUTH_REQUIRED, EXIT_ERROR } from "./types.js";
@@ -17,7 +21,11 @@ program
   .option("-v, --verbose", "Verbose output");
 
 registerLoginCommand(program);
+registerLogoutCommand(program);
 registerUploadCommand(program);
+registerWhoamiCommand(program);
+registerReceiptsCommand(program);
+registerConfigCommand(program);
 
 program.hook("postAction", () => {
   // noop – keeps the process alive for async commands

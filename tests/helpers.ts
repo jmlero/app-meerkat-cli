@@ -5,6 +5,11 @@ import type {
   SupabaseTokenResponse,
   UploadResponse,
   InboxItem,
+  Receipt,
+  ReceiptProduct,
+  ReceiptsResponse,
+  Supermarket,
+  SupermarketsResponse,
 } from "../src/types.js";
 
 export function mockConfig(
@@ -79,6 +84,66 @@ export function mockInboxItem(
     merchant_name: "Test Store",
     total_amount: 42.5,
     currency: "EUR",
+    ...overrides,
+  };
+}
+
+export function mockReceiptProduct(
+  overrides: Partial<ReceiptProduct> = {},
+): ReceiptProduct {
+  return {
+    id: 1,
+    name: "Organic Milk",
+    price: 3.49,
+    quantity: 1,
+    unit_price: 3.49,
+    ...overrides,
+  };
+}
+
+export function mockReceipt(
+  overrides: Partial<Receipt> = {},
+): Receipt {
+  return {
+    id: 101,
+    supermarket_id: 5,
+    date: "2025-01-15",
+    total: 42.5,
+    products: [mockReceiptProduct()],
+    ...overrides,
+  };
+}
+
+export function mockReceiptsResponse(
+  overrides: Partial<ReceiptsResponse> = {},
+): ReceiptsResponse {
+  return {
+    total: 1,
+    offset: 0,
+    limit: 50,
+    items: [mockReceipt()],
+    ...overrides,
+  };
+}
+
+export function mockSupermarket(
+  overrides: Partial<Supermarket> = {},
+): Supermarket {
+  return {
+    id: 5,
+    name: "Mercadona",
+    country_code: "ES",
+    receipt_count: 10,
+    ...overrides,
+  };
+}
+
+export function mockSupermarketsResponse(
+  overrides: Partial<SupermarketsResponse> = {},
+): SupermarketsResponse {
+  return {
+    total: 1,
+    items: [mockSupermarket()],
     ...overrides,
   };
 }

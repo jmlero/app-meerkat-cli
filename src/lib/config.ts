@@ -3,17 +3,17 @@ import { homedir } from "node:os";
 import { join } from "node:path";
 import type { StoredConfig, StoredCredentials } from "../types.js";
 
-function getConfigDir(): string {
+export function getConfigDir(): string {
   return (
     process.env.MEERKAT_CONFIG_DIR ?? join(homedir(), ".config", "meerkat")
   );
 }
 
-function configPath(): string {
+export function configPath(): string {
   return join(getConfigDir(), "config.json");
 }
 
-function credentialsPath(): string {
+export function credentialsPath(): string {
   return join(getConfigDir(), "credentials.json");
 }
 
